@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.levy.mapper.SuccessKilledMapper">
+		<insert id="insertSuccessKilled">
+			<!--当出现主键冲突时(即重复秒杀时)，会报错;不想让程序报错，加入ignore-->
+			insert ignore into success_killed(seckill_id,user_phone,state)
+			values (#{seckillId},#{userPhone},0)
+		</insert>
+
+		
+		<select id="queryByIdWithSecKill" resultMap="successKilledMap">
+			select 
+				sk.seckill_id ,
+				sk.user_phone ,
+				sk.create_time,
+				sk.state,
+				s.seckill_id "seckill.seckill_id",
+				s.name "seckill.name",
+				s.number "seckill.number",
+				s.start_time "seckill.start_time",
+				s.end_time  "seckill.end_time",
+				s.create_time "seckill.create_time"
+			from success_killed sk 
+			inner join seckill s 
+			on sk.seckill_id = s.seckill_id
+		</select>
+
+		<resultMap type="SuccessKilled" id="successKilledMap">
+			<id column="seckill_id" property="seckillId"/>
+			<id column="user_phone" property="userPhone"/>
+			<result property="state" column="state"/>
+			<result property="createTime" column="create_time"/>
+			
+			<association property="seckill" javaType="Seckill">
+				<id column="seckill.seckill_id" property="seckillId"/>
+				<result column="seckill.create_time" property="createTime"/>
+				<result column="seckill.start_time" property="startTime"/>
+				<result column="seckill.end_time" property="endTime"/>
+				<result column="seckill.name" property="name"/>
+				<result column="seckill.number" property="number"/>
+			</association>
+		</resultMap>
+
+
+</mapper>
