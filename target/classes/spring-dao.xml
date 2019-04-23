@@ -46,7 +46,7 @@
         <property name="mapperLocations" value="classpath:com/levy/mapper/*.xml"/>
     </bean>
 
-    <!--４:配置扫描Dao接口包,动态实现DAO接口,注入到spring容器-->
+    <!--４:配置扫描mapper接口包,动态实现mapper接口,注入到spring容器-->
     <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
         <!--注入SqlSessionFactory-->
         <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
