@@ -1,6 +1,11 @@
 package com.levy.pojo;
 
-import java.sql.Date;
+/**
+ * 这里做下笔记。
+ * 因为Date包引错，引成了java.sql.Date类，导致protoStuff反序列化失败
+ * 所以在java程序中要使用java.util.Date
+ */
+import java.util.Date;
 
 public class Seckill {
 	

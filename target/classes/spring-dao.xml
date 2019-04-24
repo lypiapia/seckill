@@ -54,9 +54,9 @@
         <property name="basePackage" value="com.levy.mapper"/>
     </bean>
 
-    <!--redisDao-->
-   <!--  <bean id="redisDao" class="com.lewis.dao.cache.RedisDao">
+    <!--redisDAO-->
+    <bean id="redisDao" class="com.levy.redis.RedisDAO">
         <constructor-arg index="0" value="localhost"/>
         <constructor-arg index="1" value="6379"/>
-    </bean> -->
+    </bean>
 </beans>

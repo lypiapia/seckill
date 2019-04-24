@@ -19,6 +19,7 @@ import com.levy.pojo.Exposer;
 import com.levy.pojo.Seckill;
 import com.levy.pojo.SeckillExecution;
 import com.levy.pojo.SuccessKilled;
+import com.levy.redis.RedisDAO;
 import com.levy.service.SeckillService;
 
 import enums.SeckillStateEnum;
@@ -30,6 +31,9 @@ public class SeckillServiceImpl implements SeckillService{
 	
 	//混淆字符串(秒杀接口)的salt，避免用户猜出md5，越复杂越好
 	private final String salt = "clk1bjij35r^6%152&@HUFJ2JAHL";
+	
+	@Autowired
+	private RedisDAO redisDAO;
 	
 	@Autowired
 	private SeckillMapper seckillMapper;
@@ -44,13 +48,27 @@ public class SeckillServiceImpl implements SeckillService{
 	public Seckill getById(long seckillId) {
 		return seckillMapper.queryById(seckillId);
 	}
-
+	
 	public Exposer exportSeckillUrl(long seckillId) {
-		Seckill seckill = seckillMapper.queryById(seckillId);
-		if(seckill == null) {	//未查到该秒杀记录
-			return new Exposer(false, seckillId);
-		}
+//		Seckill seckill = seckillMapper.queryById(seckillId);
+//		if(seckill == null) {	//未查到该秒杀记录
+//			return new Exposer(false, seckillId);
+//		}
+		//优化点：缓存优化：超时的基础上维护一致性
 		
+		//1.访问redis
+		Seckill seckill = redisDAO.getSeckill(seckillId);
+		if(seckill == null) {
+			//2.访问数据库
+			seckill = seckillMapper.queryById(seckillId);
+			if(seckill == null) {
+				//未查到该记录
+				return new Exposer(false, seckillId);
+			}else {
+				//3.放入redis
+				redisDAO.putSeckill(seckill);
+			}
+		}
 		Date startTime = seckill.getStartTime();
 		Date endTime = seckill.getEndTime();
 		Date now = new Date();
