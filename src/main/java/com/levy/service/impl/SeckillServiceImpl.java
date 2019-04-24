@@ -98,33 +98,38 @@ public class SeckillServiceImpl implements SeckillService{
 	 * 2.保证事务方法的执行时间尽可能短，不要穿插其他网络操作
 	 * 3.不是所有的方法都需要事务，如只有一条修改操作，只读操作不需要事务控制
 	 */
+	
+	/*调整了减库存与插入购买明细的顺序
+	 * 前：先 减库存 后插入购买明细
+	 * 后：先插入购买明细 后减库存
+	 * 原因：插入购买明细时并不会加行级锁，若减库存操作在先，那么就需要执行完更新和插入以后事务提交或回滚才释放锁。
+	 * 	  而如果插入购买明细在先，减库存在后，则只有在减库存时才会加行级锁。
+	 */
 	@Transactional
 	public SeckillExecution executeSeckill(long seckillId, long userPhone, String md5)
 			throws SeckillException, RepeatKillException, SeckillCloseException {
 		if(md5 == null || !md5.equals(getMD5(seckillId))) {
 			throw new SeckillException("seckill data rewrite."); //数据被重写了
 		}
-		
 		//执行秒杀逻辑，减库存+增加明细
 		Date now = new Date();
 		try {
-			//减库存
-			int updateCount = seckillMapper.reduceNumber(seckillId, now);
-			if(updateCount <= 0) {
-				//没有更新库存，说明秒杀结束
-				throw new SeckillCloseException("seckill is closed");
+			int insertCount = successKilledMapper.insertSuccessKilled(seckillId, userPhone);
+			//看是否该明细被重复插入，即用户是否重复秒杀
+			if(insertCount <= 0) {
+				throw new RepeatKillException("seckill repeated.");
 			}else {
-				//更新库存成功，秒杀成功，增加购买明细
-				int insertCount = successKilledMapper.insertSuccessKilled(seckillId, userPhone);
-				//看是否该明细被重复插入，即用户是否重复秒杀
-				if(insertCount <= 0) {
-					throw new RepeatKillException("seckill repeated.");
+				//减库存
+				int updateCount = seckillMapper.reduceNumber(seckillId, now);
+				if(updateCount <= 0) {
+					//没有更新库存，说明秒杀结束
+					throw new SeckillCloseException("seckill is closed");
 				}else {
-					//秒杀成功，得到成功插入明细记录，返回成功秒杀信息
-					SuccessKilled successKilled = successKilledMapper.queryByIdWithSecKill(seckillId, userPhone);
-					return new SeckillExecution(seckillId,SeckillStateEnum.SUCCESS,successKilled);
+						//秒杀成功，得到成功插入明细记录，返回成功秒杀信息
+						SuccessKilled successKilled = successKilledMapper.queryByIdWithSecKill(seckillId, userPhone);
+						return new SeckillExecution(seckillId,SeckillStateEnum.SUCCESS,successKilled);
+					}
 				}
-			}
 		} catch (SeckillCloseException e1) {
 			throw e1;
 		}catch (RepeatKillException e2) {
