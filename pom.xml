@@ -8,6 +8,13 @@
     <name>seckill Maven Webapp</name>
     <url>http://maven.apache.org</url>
     <dependencies>
+    	<!--导入apache工具类--> 
+    	<dependency> 
+    		<groupId>commons-collections</groupId> 
+    		<artifactId>commons-collections</artifactId> 
+    		<version>3.2.2</version> 
+    	</dependency>
+    
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

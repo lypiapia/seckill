@@ -39,6 +39,7 @@ public interface SeckillService {
 	
 	/**
 	 * 秒杀有可能成功，有可能失败，所以需要抛出异常
+	 * 		抛出RuntimeException，为了让Spring声明式事务能在秒杀失败情况下回滚事务。
 	 * @param seckillId 秒杀Id
 	 * @param userPhone	手机号码
 	 * @param md5	md5加密
@@ -46,4 +47,16 @@ public interface SeckillService {
 	 */
 	SeckillExecution executeSeckill(long seckillId,long userPhone,String md5)
 	throws SeckillException,RepeatKillException,SeckillCloseException;
+	
+	/**
+	 * 调用存储过程秒杀，不需要抛出异常
+	 * 		为什么不用抛出异常？
+	 * 			答：有关事务提交或回归交由mysql端的存储过程完成，不需要在程序中控制了。
+	 * 
+	 * @param seckillId
+	 * @param userPhone
+	 * @param md5
+	 * @return
+	 */
+	SeckillExecution executeSeckillByProcedure(long seckillId,long userPhone,String md5);
 }
